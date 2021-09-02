@@ -8,7 +8,10 @@ from napari.utils.io import imsave
 import numpy as np
 from matplotlib.colors import rgb2hex
 from matplotlib.pyplot import get_cmap
-from .utils.io import is_path_tissuumaps_filename, create_folder_if_not_exist
+from napari_tissuumaps.utils.io import (
+    is_path_tissuumaps_filename,
+    create_folder_if_not_exist,
+)
 
 SUPPORTED_FORMATS = ["image", "points", "labels", "shapes"]
 
@@ -137,7 +140,7 @@ def tmap_writer(path: str, layer_data: List[FullLayerData]) -> Optional[str]:
                 # available colors
                 color = cmap(i % cmap.N)[:3]
                 label_img = np.ones(data.shape + (3,)) * color
-                mask = (data == label)
+                mask = data == label
                 label_img[~mask] = 0
                 imsave(path_label, (label_img * 255.0).astype(np.uint8))
         elif layer_type == "shapes":

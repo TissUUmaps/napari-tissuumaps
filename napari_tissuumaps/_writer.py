@@ -10,8 +10,8 @@ from logging import getLogger
 from typing import Any, Callable, List, Optional
 from napari_plugin_engine import napari_hook_implementation
 from napari.types import FullLayerData
-from .convert import tmap_writer, SUPPORTED_FORMATS
-from .utils.io import is_path_tissuumaps_filename
+from napari_tissuumaps.convert import tmap_writer, SUPPORTED_FORMATS
+from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
 
 logger = getLogger(__name__)
 
