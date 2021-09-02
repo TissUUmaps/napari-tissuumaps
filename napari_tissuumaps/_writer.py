@@ -1,10 +1,10 @@
 """
-This module is an example of a barebones writer plugin for napari
+This module is implementing the support for saving tissuumaps project files in Napari.
+Specifically, the module implements all the hooks necessary for a writer plugin in
+Napari.
 
 It implements the ``napari_get_writer`` and ``napari_write_image`` hook specifications.
 see: https://napari.org/docs/dev/plugins/hook_specifications.html
-
-Replace code below according to your needs
 """
 from logging import getLogger
 from typing import Any, Callable, List, Optional
