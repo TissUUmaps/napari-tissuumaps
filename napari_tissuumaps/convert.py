@@ -5,17 +5,15 @@ generating pythonic versions of the data first, then saving them.
 import json
 from logging import getLogger
 import logging
-import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from napari.types import FullLayerData
 from napari.utils.io import imsave
 import numpy as np
 from matplotlib.colors import rgb2hex
 from matplotlib.pyplot import get_cmap
-from napari_tissuumaps.utils.io import (
-    is_path_tissuumaps_filename,
-    create_folder_if_not_exist,
-)
+from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
+
 
 SUPPORTED_FORMATS = ["image", "points", "labels", "shapes"]
 
@@ -147,12 +145,12 @@ def generate_tmap_config(
     return config
 
 
-def tmap_writer(path: str, layer_data: List[FullLayerData]) -> Optional[str]:
+def tmap_writer(save_path: Union[Path, str], layer_data: List[FullLayerData]) -> Optional[str]:
     """Creates a Tissuumaps project folder based on a Napari list of layers.
 
     Parameters
     ----------
-    path : str
+    save_path : Union[Path, str]
         The path to save the Tissuumaps project to. Must contain the name of the
         tissumap project file, including the .tmap extension.
     layer_data : List[FullLayerData]
@@ -165,32 +163,33 @@ def tmap_writer(path: str, layer_data: List[FullLayerData]) -> Optional[str]:
     """
 
     # Sanity check to verify the user wants to save a tmap file.
-    if not is_path_tissuumaps_filename(path):
+    if not is_path_tissuumaps_filename(save_path):
         return None
 
     # The main tissuumaps project folder is created.
-    create_folder_if_not_exist(path)
+    save_path = Path(save_path)
+    save_path.mkdir(parents=True, exist_ok=True)
 
-    filename = os.path.basename(path)  # Extracting the filename from path
-    filename = filename[: filename.find(".")]  # Removing the extension from the name
     # Creation of the tmap file
-    tmap_cfg = generate_tmap_config(filename, layer_data)
-    tmap_file = open(f"{path}/main.tmap", "w+")
+    tmap_cfg = generate_tmap_config(save_path.stem, layer_data)
+    tmap_file = open(f"{save_path}/main.tmap", "w+")
     tmap_file.write(json.dumps(tmap_cfg, indent=4))
     tmap_file.close()
     # Saving the files
     for data, meta, layer_type in layer_data:
         if layer_type == "image":
             # The Napari images can directly be saved to tif.
-            image_folder = create_folder_if_not_exist(path, "images")
-            path_image = os.path.join(image_folder, f"{meta['name']}.tif")
-            imsave(path_image, data)
+            image_folder = save_path / "images"
+            image_folder.mkdir(exist_ok=True)
+            path_image = image_folder / f"{meta['name']}.tif"
+            imsave(str(path_image), data)
         elif layer_type == "points":
             # The Napari points are in a different coordinate system (y,x) that must be
             # converted to Tissuumaps which uses (x,y). The colors of the individual
             # points are extracted from the metadata.
-            points_folder = create_folder_if_not_exist(path, "points")
-            path_points = os.path.join(points_folder, f"{meta['name']}.csv")
+            points_folder = save_path / "points"
+            points_folder.mkdir(exist_ok=True)
+            path_points = points_folder / f"{meta['name']}.csv"
             # Constructing the columns
             y, x = data[:, 0:1], data[:, 1:2]
             color = np.array([[rgb2hex(color)] for color in meta["face_color"]])
@@ -206,18 +205,20 @@ def tmap_writer(path: str, layer_data: List[FullLayerData]) -> Optional[str]:
             # different images for Tissuumaps to read. Each label gets a color given by
             # a colormap from matplotlib, instead of being provided by Napari.
             cmap = get_cmap("tab10")
-            labels_folder = create_folder_if_not_exist(path, "labels")
+            labels_folder = save_path / "labels"
+            labels_folder.mkdir(exist_ok=True)
             for i, label in enumerate(np.unique(data)):
                 if label == 0:
                     continue
-                path_label = os.path.join(labels_folder, f"{meta['name']}_{i:02d}.tif")
+                path_label = labels_folder / f"{meta['name']}_{i:02d}.tif"
                 # Currently the colormap cycles when there are more labels than
                 # available colors
                 color = cmap(i % cmap.N)[:3]
                 label_img = np.ones(data.shape + (3,)) * color
                 mask = data == label
                 label_img[~mask] = 0
-                imsave(path_label, (label_img * 255.0).astype(np.uint8))
+                label_img_uint8 = (label_img * 255.0).astype(np.uint8)
+                imsave(str(path_label), label_img_uint8)
         elif layer_type == "shapes":
             # TODO: Add support for shapes layers.
             # Tissuumaps needs to have points coordinates that corresponds to the pixel
@@ -229,4 +230,4 @@ def tmap_writer(path: str, layer_data: List[FullLayerData]) -> Optional[str]:
                 f"Layer \"{meta['name']}\" cannot be saved. This type of layer "
                 "({layer_type}) is not yet implemented."
             )
-    return path
+    return str(save_path)
