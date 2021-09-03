@@ -10,8 +10,6 @@ from typing import Any, Dict, List, Optional, Union
 from napari.types import FullLayerData
 from napari.utils.io import imsave
 import numpy as np
-from matplotlib.colors import rgb2hex
-from matplotlib.pyplot import get_cmap
 from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
 
 
@@ -145,7 +143,24 @@ def generate_tmap_config(
     return config
 
 
-def tmap_writer(save_path: Union[Path, str], layer_data: List[FullLayerData]) -> Optional[str]:
+def rgb2hex(color_vec: np.ndarray) -> str:
+    """Transforms an array of floats into a hex color string (#xxxxxx).
+
+    Parameters
+    ----------
+    color_vec : np.ndarray
+        A numpy array of three rgb components.
+    Returns
+    -------
+    str
+        The color as a string in hex format.
+    """
+    return "#" + "".join([f"{int(c*255):2X}" for c in color_vec])
+
+
+def tmap_writer(
+    save_path: Union[Path, str], layer_data: List[FullLayerData]
+) -> Optional[str]:
     """Creates a Tissuumaps project folder based on a Napari list of layers.
 
     Parameters
@@ -204,7 +219,6 @@ def tmap_writer(save_path: Union[Path, str], layer_data: List[FullLayerData]) ->
             # The labels layers may have multiple sub-labels that must be separated in
             # different images for Tissuumaps to read. Each label gets a color given by
             # a colormap from matplotlib, instead of being provided by Napari.
-            cmap = get_cmap("tab10")
             labels_folder = save_path / "labels"
             labels_folder.mkdir(exist_ok=True)
             for i, label in enumerate(np.unique(data)):
@@ -213,8 +227,7 @@ def tmap_writer(save_path: Union[Path, str], layer_data: List[FullLayerData]) ->
                 path_label = labels_folder / f"{meta['name']}_{i:02d}.tif"
                 # Currently the colormap cycles when there are more labels than
                 # available colors
-                color = cmap(i % cmap.N)[:3]
-                label_img = np.ones(data.shape + (3,)) * color
+                label_img = np.ones(data.shape + (3,))
                 mask = data == label
                 label_img[~mask] = 0
                 label_img_uint8 = (label_img * 255.0).astype(np.uint8)
