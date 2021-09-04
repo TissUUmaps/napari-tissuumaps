@@ -27,6 +27,19 @@ You can install `napari-tissuumaps` via [pip]:
 
     pip install napari-tissuumaps
 
+You can also install `napari-tissumaps` via [napari]:
+
+In Napari, access the menubar, Plugins > Install/Uninstall Plugins.
+Search for napari-tissuumaps in the list and choose install, or type
+`napari-tissuumaps` (without backticks) in the "install by name/url, or drop file..."
+text area and choose install.
+
+## Usage
+
+To export a project for Tissuumaps, access the menubar, File > Save All Layers... and
+choose a filename with a .tmap extension. It will create a folder containing all the
+necessary files for Tissuumaps.
+
 ## Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
