@@ -10,8 +10,8 @@ A plugin to add compatibility with Tissuumaps
 
 ----------------------------------
 
-This plugins adds a new writer to Napari to export projects to [https://tissuumaps.research.it.uu.se/](Tissuumaps).
-Exported projects can than be open on the browser or on a standalone GUI with [https://github.com/wahlby-lab/FlaskTissUUmaps](FlaskTissuumaps).
+This plugins adds a new writer to Napari to export projects to [Tissumaps](https://tissuumaps.research.it.uu.se/).
+Exported projects can than be open on the browser or on a standalone GUI with [FlaskTissumaps](https://github.com/wahlby-lab/FlaskTissUUmaps).
 
 <!--
 Don't miss the full getting started guide to set up your new package:
