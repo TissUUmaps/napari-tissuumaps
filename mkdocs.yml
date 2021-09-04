@@ -5,7 +5,7 @@ site_author: Nicolas Pielawski
 theme: readthedocs
 
 
-repo_url: https://github.com/npielawski/napari-tissuumaps
+repo_url: https://github.com/wahlby-lab/napari-tissuumaps
 
 pages:
 - Home: index.md
