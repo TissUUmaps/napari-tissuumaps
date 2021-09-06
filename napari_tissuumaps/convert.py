@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from napari.types import FullLayerData
 from napari.utils.io import imsave
+from napari.viewer import current_viewer
 import numpy as np
 from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
 
@@ -93,10 +94,11 @@ def generate_tmap_config(
 
     # Generating the list of layers (images and labels)
     layers, layer_opacities, layer_visibilities = [], {}, {}
+    regions = {}
     idx = 0  # Image index
     # Each image gets a unique `idx` value, as well as each label in each Napari label
     # layer.
-    for data, meta, layer_type in filter_type(layer_data, ["image", "labels"]):
+    for data, meta, layer_type in layer_data:
         if layer_type == "image":
             layers.append(
                 {"name": meta["name"], "tileSource": f"images/{meta['name']}.tif.dzi"}
@@ -119,6 +121,8 @@ def generate_tmap_config(
                 layer_opacities[str(idx)] = str(meta["opacity"])
                 layer_visibilities[str(idx)] = str(meta["visible"])
                 idx += 1
+        elif layer_type == "shapes":
+            regions.update(generate_shapes_dict(data, meta))
 
     # The final configuration to be returned, combining all the lists and dictionaries
     # generated above.
@@ -129,7 +133,7 @@ def generate_tmap_config(
         "layerOpacities": layer_opacities,
         "layerVisibilities": layer_visibilities,
         "markerFiles": markers,
-        "regions": {},
+        "regions": regions,
         "settings": [
             {
                 "function": "_linkMarkersToChannels",
@@ -142,6 +146,77 @@ def generate_tmap_config(
     }
     return config
 
+def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str, Any]:
+    """Generates a dictionary containing the info to plot shapes in Tissuumaps.
+    The dict can later on be exported as a json file or added to the .tmap project
+    file.
+
+    Parameters
+    ----------
+    data : FullLayerData
+        The Shapes layer data (A list of shapes, which are lists of points) as provided
+        by Napari.
+    meta : Dict[str, Any]
+        The metadata of the shapes layer containing the name and colors of the shapes.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing the information to draw the shapes in Tissuumaps.
+    """
+    shape_dict = {}
+    for i, shape in enumerate(data):
+        shape_name = meta["name"] + f"_{i+1}"
+        # We enumerate each shapes that appear in the layer
+        subshape_dict = {}
+        subshape_dict["id"] = shape_name
+        # Points with pixel positions
+        points_array = []
+        _xmin, _xmax, _ymin, _ymax = np.inf, -np.inf, np.inf, -np.inf
+        dimensions = current_viewer().dims.range
+        width, height = dimensions[0][1], dimensions[1][1]
+        for _points in shape:
+            assert isinstance(_points, np.ndarray)
+            points = [_points[0] / width, _points[1] / height]
+            points_array.append({"x": points[0], "y": points[1]})
+            _xmin = _xmin if points[0] > _xmin else points[0]
+            _xmax = _xmax if points[0] < _xmax else points[0]
+            _ymin = _ymin if points[1] > _ymin else points[1]
+            _ymax = _ymax if points[1] < _ymax else points[1]
+        subshape_dict["points"] = [[points_array]]
+        # Points with normalized positions (in [0,1])
+        global_points_array = []
+        _gxmin, _gxmax, _gymin, _gymax = np.inf, -np.inf, np.inf, -np.inf
+        for points in shape:
+            assert isinstance(points, np.ndarray)
+            global_points_array.append({"x": points[0], "y": points[1]})
+            _gxmin = _gxmin if points[0] > _gxmin else points[0]
+            _gxmax = _gxmax if points[0] < _gxmax else points[0]
+            _gymin = _gymin if points[1] > _gymin else points[1]
+            _gymax = _gymax if points[1] < _gymax else points[1]
+        subshape_dict["globalPoints"] = [[global_points_array]]
+        shape_color = rgb2hex(meta["face_color"][i])
+        shape_settings = {
+            "regionName": shape_name,
+            "regionClass": None,
+            "barcodeHistogram": [],
+            "len": 1,
+            "_xmin": _xmin,
+            "_xmax": _xmax,
+            "_ymin": _ymin,
+            "_ymax": _ymax,
+            "_gxmin": _gxmin,
+            "_gxmax": _gxmax,
+            "_gymin": _gymin,
+            "_gymax": _gymax,
+            "polycolor": shape_color,
+            "associatedPoints": [],
+            "filled": True,
+        }
+        subshape_dict.update(shape_settings)
+        # We add it to the full dict
+        shape_dict[shape_name] = subshape_dict
+    return shape_dict
 
 def rgb2hex(color_vec: np.ndarray) -> str:
     """Transforms an array of floats into a hex color string (#xxxxxx).
@@ -155,7 +230,7 @@ def rgb2hex(color_vec: np.ndarray) -> str:
     str
         The color as a string in hex format.
     """
-    return "#" + "".join([f"{int(c*255):2X}" for c in color_vec])
+    return "#" + "".join([f"{int(c*255):2X}" for c in color_vec[:3]])
 
 
 def tmap_writer(
@@ -187,7 +262,7 @@ def tmap_writer(
 
     # Creation of the tmap file
     tmap_cfg = generate_tmap_config(save_path.stem, layer_data)
-    tmap_file = open(f"{save_path}/main.tmap", "w+")
+    tmap_file = open(save_path / "main.tmap", "w+")
     tmap_file.write(json.dumps(tmap_cfg, indent=4))
     tmap_file.close()
     # Saving the files
@@ -233,11 +308,15 @@ def tmap_writer(
                 label_img_uint8 = (label_img * 255.0).astype(np.uint8)
                 imsave(str(path_label), label_img_uint8)
         elif layer_type == "shapes":
-            # TODO: Add support for shapes layers.
-            # Tissuumaps needs to have points coordinates that corresponds to the pixel
-            # positions but also normalized in the range [0,1]. The next version of
-            # Napari will allow that. (Latest version is 0.4.10, released on 17 Jun 21)
-            logging.warning("Shape layers are not yet supported.")
+            shapes_folder = save_path / "shapes"
+            shapes_folder.mkdir(exist_ok=True)
+
+           # Saving the json
+            shapes_filename = meta["name"] + ".json"
+            shapes_file = open(shapes_folder / shapes_filename, "w+")
+            shape_dict = generate_shapes_dict(data, meta)
+            shapes_file.write(json.dumps(shape_dict, indent=4))
+            shapes_file.close()
         else:
             logging.warning(
                 f"Layer \"{meta['name']}\" cannot be saved. This type of layer "
