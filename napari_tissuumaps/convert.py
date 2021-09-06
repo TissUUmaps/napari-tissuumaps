@@ -15,6 +15,15 @@ from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
 
 
 SUPPORTED_FORMATS = ["image", "points", "labels", "shapes"]
+TMAP_COLORS = [
+    [100, 0, 0],  # Red
+    [0, 100, 0],  # Green
+    [0, 0, 100],  # Blue
+    [100, 100, 0],  # Yellow
+    [0, 100, 100],  # Cyan
+    [100, 0, 100],  # Magenta
+    [100, 100, 100],  # Gray
+]
 
 logger = getLogger(__name__)
 
@@ -93,9 +102,18 @@ def generate_tmap_config(
         )
 
     # Generating the list of layers (images and labels)
-    layers, layer_opacities, layer_visibilities = [], {}, {}
+    layers, layer_filters, layer_opacities, layer_visibilities = [], {}, {}, {}
+    default_filters = [
+        {"name": "Saturation", "value": "0"},
+        {"name": "Brightness", "value": "0"},
+        {"name": "Contrast", "value": "1"},
+    ]
     regions = {}
     idx = 0  # Image index
+    # We need to keep track of how many colors have been used for the labels, which
+    # is different from `idx`. Using `idx` would make the app skip colors everytime
+    # there is an image.
+    used_colors = 0
     # Each image gets a unique `idx` value, as well as each label in each Napari label
     # layer.
     for data, meta, layer_type in layer_data:
@@ -103,6 +121,8 @@ def generate_tmap_config(
             layers.append(
                 {"name": meta["name"], "tileSource": f"images/{meta['name']}.tif.dzi"}
             )
+            layer_filters[str(idx)] = default_filters.copy()
+            layer_filters[str(idx)].append({"name": "Color", "value": "0"})
             layer_opacities[str(idx)] = str(meta["opacity"])
             layer_visibilities[str(idx)] = str(meta["visible"])
             idx += 1
@@ -118,9 +138,13 @@ def generate_tmap_config(
                         "tileSource": f"labels/{meta['name']}_{j:02d}.tif.dzi",
                     }
                 )
+                color = ",".join(map(str, TMAP_COLORS[used_colors % len(TMAP_COLORS)]))
+                layer_filters[str(idx)] = default_filters.copy()
+                layer_filters[str(idx)].append({"name": "Color", "value": color})
                 layer_opacities[str(idx)] = str(meta["opacity"])
                 layer_visibilities[str(idx)] = str(meta["visible"])
                 idx += 1
+                used_colors += 1
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
 
@@ -130,6 +154,8 @@ def generate_tmap_config(
         "compositeMode": "lighter",
         "filename": filename,
         "layers": layers,
+        "filters": ["Saturation", "Brightness", "Contrast", "Color"],
+        "layerFilters": layer_filters,
         "layerOpacities": layer_opacities,
         "layerVisibilities": layer_visibilities,
         "markerFiles": markers,
@@ -145,6 +171,7 @@ def generate_tmap_config(
         ],
     }
     return config
+
 
 def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str, Any]:
     """Generates a dictionary containing the info to plot shapes in Tissuumaps.
@@ -217,6 +244,7 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
         # We add it to the full dict
         shape_dict[shape_name] = subshape_dict
     return shape_dict
+
 
 def rgb2hex(color_vec: np.ndarray) -> str:
     """Transforms an array of floats into a hex color string (#xxxxxx).
@@ -311,7 +339,7 @@ def tmap_writer(
             shapes_folder = save_path / "shapes"
             shapes_folder.mkdir(exist_ok=True)
 
-           # Saving the json
+            # Saving the json
             shapes_filename = meta["name"] + ".json"
             shapes_file = open(shapes_folder / shapes_filename, "w+")
             shape_dict = generate_shapes_dict(data, meta)
