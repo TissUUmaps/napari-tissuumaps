@@ -204,7 +204,7 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
         width, height = dimensions[0][1], dimensions[1][1]
         for _points in shape:
             assert isinstance(_points, np.ndarray)
-            points = [_points[0] / width, _points[1] / height]
+            points = [_points[1] / height, _points[0] / width]
             points_array.append({"x": points[0], "y": points[1]})
             _xmin = _xmin if points[0] > _xmin else points[0]
             _xmax = _xmax if points[0] < _xmax else points[0]
@@ -214,8 +214,9 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
         # Points with normalized positions (in [0,1])
         global_points_array = []
         _gxmin, _gxmax, _gymin, _gymax = np.inf, -np.inf, np.inf, -np.inf
-        for points in shape:
-            assert isinstance(points, np.ndarray)
+        for _points in shape:
+            assert isinstance(_points, np.ndarray)
+            points = [_points[1], _points[0]]
             global_points_array.append({"x": points[0], "y": points[1]})
             _gxmin = _gxmin if points[0] > _gxmin else points[0]
             _gxmax = _gxmax if points[0] < _gxmax else points[0]
