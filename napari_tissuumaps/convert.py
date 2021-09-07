@@ -265,7 +265,7 @@ def rgb2hex(color_vec: np.ndarray) -> str:
     str
         The color as a string in hex format.
     """
-    return "#" + "".join([f"{int(c*255):2X}" for c in color_vec[:3]])
+    return "#" + "".join([f"{int(c*255):02X}" for c in color_vec[:3]])
 
 
 def tmap_writer(
