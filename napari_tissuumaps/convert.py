@@ -107,7 +107,6 @@ def generate_tmap_config(
     # Generating the list of layers (images and labels)
     layers, layer_filters, layer_opacities, layer_visibilities = [], {}, {}, {}
     default_filters = [
-        {"name": "Saturation", "value": "0"},
         {"name": "Brightness", "value": "0"},
         {"name": "Contrast", "value": "1"},
     ]
@@ -157,7 +156,7 @@ def generate_tmap_config(
         "compositeMode": "lighter",
         "filename": filename,
         "layers": layers,
-        "filters": ["Saturation", "Brightness", "Contrast", "Color"],
+        "filters": ["Brightness", "Contrast", "Color"],
         "layerFilters": layer_filters,
         "layerOpacities": layer_opacities,
         "layerVisibilities": layer_visibilities,
