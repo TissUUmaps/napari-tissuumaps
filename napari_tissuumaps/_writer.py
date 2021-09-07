@@ -173,7 +173,5 @@ def napari_write_shapes(path: str, data: Any, meta: dict) -> Optional[str]:
         If data is successfully written, return the ``path`` that was written.
         Otherwise, if nothing was done, return ``None``.
     """
-    # Not yet supported
-    # TODO: When adding support, replace with:
-    # return tmap_writer(path, [(data, meta, "shapes")])
-    return None
+    return tmap_writer(path, [(data, meta, "shapes")])
+
