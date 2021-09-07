@@ -60,7 +60,7 @@ def filter_type(
 
 
 def generate_tmap_config(
-    filename: str, layer_data: List[FullLayerData]
+    filename: str, layer_data: List[FullLayerData], internal_shapes: bool = False
 ) -> Dict[str, Any]:
     """Generates a dict containing the tissumaps cfg of the napari layers to be saved.
 
@@ -72,6 +72,9 @@ def generate_tmap_config(
         The layers to be saved as provided by the Napari plugin manager. It contains a
         list of layers, which are themselves dictionary containing the data, the meta-
         data and the type of layer.
+    internal_shapes : bool
+        Determines if the shapes layer are saved in the tmap file (True) or if the tmap
+        file references an external json file (False).
     Returns
     -------
     Dict[str, Any]
@@ -159,7 +162,6 @@ def generate_tmap_config(
         "layerOpacities": layer_opacities,
         "layerVisibilities": layer_visibilities,
         "markerFiles": markers,
-        "regions": regions,
         "settings": [
             {
                 "function": "_linkMarkersToChannels",
@@ -170,6 +172,11 @@ def generate_tmap_config(
             {"function": "_markerScale2", "module": "glUtils", "value": 7.5},
         ],
     }
+    if internal_shapes:
+        config["regions"] = regions
+    else:
+        config["regionFile"] = "regions/regions.json"
+
     return config
 
 
@@ -294,6 +301,9 @@ def tmap_writer(
     tmap_file = open(save_path / "main.tmap", "w+")
     tmap_file.write(json.dumps(tmap_cfg, indent=4))
     tmap_file.close()
+
+    # Shapes have to be combined in the same file
+    regions = {}
     # Saving the files
     for data, meta, layer_type in layer_data:
         if layer_type == "image":
@@ -337,18 +347,21 @@ def tmap_writer(
                 label_img_uint8 = (label_img * 255.0).astype(np.uint8)
                 imsave(str(path_label), label_img_uint8)
         elif layer_type == "shapes":
-            shapes_folder = save_path / "shapes"
-            shapes_folder.mkdir(exist_ok=True)
-
-            # Saving the json
-            shapes_filename = meta["name"] + ".json"
-            shapes_file = open(shapes_folder / shapes_filename, "w+")
-            shape_dict = generate_shapes_dict(data, meta)
-            shapes_file.write(json.dumps(shape_dict, indent=4))
-            shapes_file.close()
+            regions.update(generate_shapes_dict(data, meta))
         else:
             logging.warning(
                 f"Layer \"{meta['name']}\" cannot be saved. This type of layer "
                 "({layer_type}) is not yet implemented."
             )
+
+    # Saving the shapes
+    if len(regions) > 0:
+        shapes_folder = save_path / "regions"
+        shapes_folder.mkdir(exist_ok=True)
+        # Saving the json
+        shapes_filename = "regions.json"
+        shapes_file = open(shapes_folder / shapes_filename, "w+")
+        shapes_file.write(json.dumps(regions, indent=4))
+        shapes_file.close()
+
     return str(save_path)
