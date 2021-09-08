@@ -162,13 +162,8 @@ def generate_tmap_config(
         "layerVisibilities": layer_visibilities,
         "markerFiles": markers,
         "settings": [
-            {
-                "function": "_linkMarkersToChannels",
-                "module": "overlayUtils",
-                "value": True,
-            },
             {"function": "_autoLoadCSV", "module": "dataUtils", "value": True},
-            {"function": "_markerScale2", "module": "glUtils", "value": 7.5},
+            {"function": "_globalMarkerScale", "module": "glUtils", "value": 7.5},
         ],
     }
     if internal_shapes:
