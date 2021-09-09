@@ -194,8 +194,8 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
     """
     shape_dict = {}
     for i, shape in enumerate(data):
-        shape_name = meta["name"] + f"_{i+1}"
         shape_type = meta["shape_type"][i]
+        shape_name = meta["name"] + f"_{shape_type}_{i+1}"
         # We enumerate each shapes that appear in the layer
         subshape_dict = {}
         subshape_dict["id"] = shape_name
