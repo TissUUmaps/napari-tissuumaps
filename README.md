@@ -21,6 +21,27 @@ and review the napari docs for plugin developers:
 https://napari.org/docs/plugins/index.html
 -->
 
+## Features
+
+<p align="center">
+  <img src="images/screenshot.jpg" alt="Demonstration of a project exported from Napari to TissUUmaps."/>
+</p>
+
+The plugin now supports:
+
+* Exporting images
+* Exporting labels (the colors follow TissUUmaps colormaps)
+* Exporting points
+* Exporting shapes, including:
+    * Polygons
+    * Rectangles
+    * Lines
+    * Paths
+    * Ellipses
+
+The plugin exports the right color for the labels, points and shapes and also saves the
+visibility/opacity of each layers.
+
 ## Installation
 
 You can install `napari-tissuumaps` via [pip]:
