@@ -24,7 +24,7 @@ https://napari.org/docs/plugins/index.html
 ## Features
 
 <p align="center">
-  <img src="images/screenshot.jpg" alt="Demonstration of a project exported from Napari to TissUUmaps."/>
+  <img src="images/screenshot.jpg" alt="Demonstration of a project exported from Napari to TissUUmaps." width="500" />
 </p>
 
 The plugin now supports:
