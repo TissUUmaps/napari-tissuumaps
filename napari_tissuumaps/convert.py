@@ -195,16 +195,49 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
     shape_dict = {}
     for i, shape in enumerate(data):
         shape_name = meta["name"] + f"_{i+1}"
+        shape_type = meta["shape_type"][i]
         # We enumerate each shapes that appear in the layer
         subshape_dict = {}
         subshape_dict["id"] = shape_name
+        # Different shapes have different points to draw
+        points_to_draw = []
+        if shape_type == "ellipse":
+            assert isinstance(shape, np.ndarray)
+            ellipse_center = (
+                (shape[0][0] + shape[2][0]) / 2.,
+                (shape[0][1] + shape[1][1]) / 2.,
+            )
+            # `a` represents the vector from the center of the ellipse to the right
+            # hand side, while `b` is the up vector.
+            ellipse_a = shape[1][0] - ellipse_center[0]
+            ellipse_b = shape[1][1] - ellipse_center[1]
+
+            # Minimum arc distance is the the length of a single arc as a function of
+            # the ellipse's radii. The purpose is such that the resolution (number of
+            # points) grows with the ellipse. The formula is approximated and computes
+            # the arc based on a circle with the radius being equal to the longest
+            # axis of the ellipse.
+            minimum_arc_distance = 3.
+            max_axis = np.maximum(np.abs(ellipse_a), np.abs(ellipse_b))
+            N = int(np.ceil(2. * np.pi * max_axis / minimum_arc_distance))
+            thetas = np.linspace(0, 2*np.pi, N+1)
+            points_to_draw = np.stack([
+                ellipse_a * np.cos(thetas) + ellipse_center[0],
+                ellipse_b * np.sin(thetas) + ellipse_center[1]
+            ], axis=-1)
+        elif shape_type == "line" or shape_type == "path":
+            assert isinstance(shape, np.ndarray)
+            points_to_draw = np.vstack([shape, shape[-2::-1]])
+        else: # shape_type == "polygon" or shape_type == "rectangle"
+            assert isinstance(shape, np.ndarray)
+            points_to_draw = shape
+
         # Points with pixel positions
         points_array = []
         _xmin, _xmax, _ymin, _ymax = np.inf, -np.inf, np.inf, -np.inf
         dimensions = current_viewer().dims.range
         width, height = dimensions[0][1], dimensions[1][1]
-        for _points in shape:
-            assert isinstance(_points, np.ndarray)
+        for _points in points_to_draw:
             points = [_points[1] / height, _points[0] / width]
             points_array.append({"x": points[0], "y": points[1]})
             _xmin = _xmin if points[0] > _xmin else points[0]
@@ -215,8 +248,7 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
         # Points with normalized positions (in [0,1])
         global_points_array = []
         _gxmin, _gxmax, _gymin, _gymax = np.inf, -np.inf, np.inf, -np.inf
-        for _points in shape:
-            assert isinstance(_points, np.ndarray)
+        for _points in points_to_draw:
             points = [_points[1], _points[0]]
             global_points_array.append({"x": points[0], "y": points[1]})
             _gxmin = _gxmin if points[0] > _gxmin else points[0]
