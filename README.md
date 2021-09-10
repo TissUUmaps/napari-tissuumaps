@@ -6,7 +6,7 @@
 [![tests](https://github.com/wahlby-lab/napari-tissuumaps/workflows/tests/badge.svg)](https://github.com/wahlby-lab/napari-tissuumaps/actions)
 [![codecov](https://codecov.io/gh/wahlby-lab/napari-tissuumaps/branch/master/graph/badge.svg)](https://codecov.io/gh/wahlby-lab/napari-tissuumaps)
 
-A plugin to add compatibility with Tissuumaps
+A plugin to add compatibility with TissUUmaps
 
 ----------------------------------
 
@@ -52,14 +52,14 @@ You can also install `napari-tissumaps` via [napari]:
 
 In Napari, access the menubar, Plugins > Install/Uninstall Plugins.
 Search for napari-tissuumaps in the list and choose install, or type
-`napari-tissuumaps` (without backticks) in the "install by name/url, or drop file..."
-text area and choose install.
+`napari-tissuumaps` in the "install by name/url, or drop file..." text area and choose
+install.
 
 ## ⛏ Usage
 
-To export a project for Tissuumaps, access the menubar, File > Save All Layers... and
+To export a project for TissUUmaps, access the menubar, File > Save All Layers... and
 choose a filename with a .tmap extension. It will create a folder containing all the
-necessary files for Tissuumaps.
+necessary files for TissUUmaps.
 
 ## 👩‍💻 Contributing
 
