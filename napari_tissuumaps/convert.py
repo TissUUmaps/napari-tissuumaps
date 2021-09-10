@@ -204,8 +204,8 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
         if shape_type == "ellipse":
             assert isinstance(shape, np.ndarray)
             ellipse_center = (
-                (shape[0][0] + shape[2][0]) / 2.,
-                (shape[0][1] + shape[1][1]) / 2.,
+                (shape[0][0] + shape[2][0]) / 2.0,
+                (shape[0][1] + shape[1][1]) / 2.0,
             )
             # `a` represents the vector from the center of the ellipse to the right
             # hand side, while `b` is the up vector.
@@ -217,21 +217,23 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
             # points) grows with the ellipse. The formula is approximated and computes
             # the arc based on a circle with the radius being equal to the longest
             # axis of the ellipse.
-            minimum_arc_distance = 3.
+            minimum_arc_distance = 3.0
             max_axis = np.maximum(np.abs(ellipse_a), np.abs(ellipse_b))
             N = np.maximum(
-                int(np.ceil(2. * np.pi * max_axis / minimum_arc_distance)),
-                10
+                int(np.ceil(2.0 * np.pi * max_axis / minimum_arc_distance)), 10
             )
-            thetas = np.linspace(0, 2*np.pi, N+1)
-            points_to_draw = np.stack([
-                ellipse_a * np.cos(thetas) + ellipse_center[0],
-                ellipse_b * np.sin(thetas) + ellipse_center[1]
-            ], axis=-1)
+            thetas = np.linspace(0, 2 * np.pi, N + 1)
+            points_to_draw = np.stack(
+                [
+                    ellipse_a * np.cos(thetas) + ellipse_center[0],
+                    ellipse_b * np.sin(thetas) + ellipse_center[1],
+                ],
+                axis=-1,
+            )
         elif shape_type == "line" or shape_type == "path":
             assert isinstance(shape, np.ndarray)
             points_to_draw = np.vstack([shape, shape[-2::-1]])
-        else: # shape_type == "polygon" or shape_type == "rectangle"
+        else:  # shape_type == "polygon" or shape_type == "rectangle"
             assert isinstance(shape, np.ndarray)
             points_to_draw = shape
 
