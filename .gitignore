@@ -63,6 +63,10 @@ docs/_build/
 # MkDocs documentation
 /site/
 
+# Pdoc documentation
+docs/*.html
+docs/*.json
+
 # PyBuilder
 target/
 
