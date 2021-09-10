@@ -1,4 +1,4 @@
-# napari-tissuumaps
+# 🏝 napari-tissuumaps 🧫
 
 [![License](https://img.shields.io/pypi/l/napari-tissuumaps.svg?color=green)](https://github.com/npielawski/napari-tissuumaps/raw/master/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-tissuumaps.svg?color=green)](https://pypi.org/project/napari-tissuumaps)
@@ -21,7 +21,7 @@ and review the napari docs for plugin developers:
 https://napari.org/docs/plugins/index.html
 -->
 
-## Features
+## 🚀 Features
 
 <p align="center">
   <img src="images/screenshot.jpg" alt="Demonstration of a project exported from Napari to TissUUmaps." width="500" />
@@ -42,7 +42,7 @@ The plugin now supports:
 The plugin exports the right color for the labels, points and shapes and also saves the
 visibility/opacity of each layers.
 
-## Installation
+## 📺 Installation
 
 You can install `napari-tissuumaps` via [pip]:
 
@@ -55,23 +55,23 @@ Search for napari-tissuumaps in the list and choose install, or type
 `napari-tissuumaps` (without backticks) in the "install by name/url, or drop file..."
 text area and choose install.
 
-## Usage
+## ⛏ Usage
 
 To export a project for Tissuumaps, access the menubar, File > Save All Layers... and
 choose a filename with a .tmap extension. It will create a folder containing all the
 necessary files for Tissuumaps.
 
-## Contributing
+## 👩‍💻 Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure
 the coverage at least stays the same before you submit a pull request.
 
-## License
+## ⚖️ License
 
 Distributed under the terms of the [MIT] license,
 "napari-tissuumaps" is free and open source software
 
-## Issues
+## 🚒 Issues
 
 If you encounter any problems, please [file an issue] along with a detailed description.
 
