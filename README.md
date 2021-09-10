@@ -61,6 +61,10 @@ To export a project for TissUUmaps, access the menubar, File > Save All Layers..
 choose a filename with a `.tmap` extension. It will create a folder containing all the
 necessary files for TissUUmaps.
 
+## 📚 Documentation
+
+Install pdoc with `pip install pdoc` and run the `docs/generate_doc.sh` script from the root. It will generate a static website that contains the documentation in the `docs` folder.
+
 ## 👩‍💻 Contributing
 
 Contributions are very welcome. Tests can be run with [tox], please ensure

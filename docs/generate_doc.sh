@@ -9,7 +9,7 @@ then
 fi
 
 pdoc \
-    -o . \
+    -o docs \
     -d numpy \
     --logo https://github.com/wahlby-lab/TissUUmaps/raw/master/misc/design/logo.png \
     --logo-link https://github.com/wahlby-lab/napari-tissuumaps/ \
