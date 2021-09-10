@@ -39,7 +39,7 @@ The plugin now supports:
     * Paths
     * Ellipses
 
-The plugin exports the right color for the labels, points and shapes and also saves the
+The plugin exports the right color for the points and shapes and also saves the
 visibility/opacity of each layers.
 
 ## 📺 Installation
@@ -58,7 +58,7 @@ install.
 ## ⛏ Usage
 
 To export a project for TissUUmaps, access the menubar, File > Save All Layers... and
-choose a filename with a .tmap extension. It will create a folder containing all the
+choose a filename with a `.tmap` extension. It will create a folder containing all the
 necessary files for TissUUmaps.
 
 ## 👩‍💻 Contributing
