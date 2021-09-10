@@ -6,11 +6,11 @@
 [![tests](https://github.com/wahlby-lab/napari-tissuumaps/workflows/tests/badge.svg)](https://github.com/wahlby-lab/napari-tissuumaps/actions)
 [![codecov](https://codecov.io/gh/wahlby-lab/napari-tissuumaps/branch/master/graph/badge.svg)](https://codecov.io/gh/wahlby-lab/napari-tissuumaps)
 
-A plugin to add compatibility with TissUUmaps
+A plugin to add compatibility with [TissUUmaps](https://tissuumaps.research.it.uu.se/).
 
 ----------------------------------
 
-This plugins adds a new writer to Napari to export projects to [Tissumaps](https://tissuumaps.research.it.uu.se/).
+This plugins adds a new writer to [Napari] to export projects to [TissUUmaps](https://tissuumaps.research.it.uu.se/).
 Exported projects can than be open on the browser or on a standalone GUI with [FlaskTissumaps](https://github.com/wahlby-lab/FlaskTissUUmaps).
 
 <!--
