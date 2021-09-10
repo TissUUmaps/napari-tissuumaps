@@ -219,7 +219,10 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
             # axis of the ellipse.
             minimum_arc_distance = 3.
             max_axis = np.maximum(np.abs(ellipse_a), np.abs(ellipse_b))
-            N = int(np.ceil(2. * np.pi * max_axis / minimum_arc_distance))
+            N = np.maximum(
+                int(np.ceil(2. * np.pi * max_axis / minimum_arc_distance)),
+                10
+            )
             thetas = np.linspace(0, 2*np.pi, N+1)
             points_to_draw = np.stack([
                 ellipse_a * np.cos(thetas) + ellipse_center[0],
