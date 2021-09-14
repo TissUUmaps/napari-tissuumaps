@@ -354,11 +354,18 @@ def tmap_writer(
             y, x = data[:, 0:1], data[:, 1:2]
             color = np.array([[rgb2hex(color)] for color in meta["face_color"]])
             points = np.block([x, y, color])
+            # Extract the properties
+            properties = meta.get("properties")
             # Saving the csv file manually.
             points_file = open(path_points, "w+")
-            points_file.write("name,x,y,color\n")
-            for _x, _y, _color in points:
-                points_file.write(f"{meta['name']},{_x},{_y},{_color}\n")
+            prop_keys = "," + ",".join(properties.keys()) if properties else ""
+            points_file.write(f"name,x,y,color{prop_keys}\n")
+            for i, (_x, _y, _color) in enumerate(points):
+                points_file.write(f"{meta['name']},{_x},{_y},{_color}")
+                if properties:
+                    for prop in properties.keys():
+                        points_file.write(f",{properties[prop][i]}")
+                points_file.write("\n")
             points_file.close()
         elif layer_type == "labels":
             # The labels layers may have multiple sub-labels that must be separated in
