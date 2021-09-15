@@ -4,7 +4,6 @@ generating pythonic versions of the data first, then saving them.
 """
 import json
 from logging import getLogger
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from napari.types import FullLayerData
@@ -13,8 +12,9 @@ from napari.viewer import current_viewer
 import numpy as np
 from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
 
-
+# List of Napari layers that are supported by this plugin:
 SUPPORTED_FORMATS = ["image", "points", "labels", "shapes"]
+# Base colormap of the filters to apply on images in TissUUmaps.
 TMAP_COLORS = [
     [100, 0, 0],  # Red
     [0, 100, 0],  # Green
@@ -393,7 +393,7 @@ def tmap_writer(
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
         else:
-            logging.warning(
+            logger.warning(
                 f"Layer \"{meta['name']}\" cannot be saved. This type of layer "
                 "({layer_type}) is not yet implemented."
             )
