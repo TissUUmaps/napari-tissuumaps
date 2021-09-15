@@ -280,6 +280,12 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
             "filled": True,
         }
         subshape_dict.update(shape_settings)
+        # Adding the properties, if there are any
+        properties = meta.get("properties", {}).copy()
+        for prop in properties:
+            if isinstance(properties[prop], np.ndarray):
+                properties[prop] = properties[prop].tolist()[i]
+        subshape_dict["properties"] = properties
         # We add it to the full dict
         shape_dict[shape_name] = subshape_dict
     return shape_dict
