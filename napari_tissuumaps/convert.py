@@ -359,15 +359,16 @@ def tmap_writer(
             # Constructing the columns
             y, x = data[:, 0:1], data[:, 1:2]
             color = np.array([[rgb2hex(color)] for color in meta["face_color"]])
-            points = np.block([x, y, color])
+            symbol = np.array([[meta["symbol"]]] * x.shape[0])
+            points = np.block([x, y, color, symbol])
             # Extract the properties
             properties = meta.get("properties")
             # Saving the csv file manually.
             points_file = open(path_points, "w+")
             prop_keys = "," + ",".join(properties.keys()) if properties else ""
-            points_file.write(f"name,x,y,color{prop_keys}\n")
-            for i, (_x, _y, _color) in enumerate(points):
-                points_file.write(f"{meta['name']},{_x},{_y},{_color}")
+            points_file.write(f"name,x,y,color,symbol{prop_keys}\n")
+            for i, (_x, _y, _color, _symbol) in enumerate(points):
+                points_file.write(f"{meta['name']},{_x},{_y},{_color},{_symbol}")
                 if properties:
                     for prop in properties.keys():
                         points_file.write(f",{properties[prop][i]}")
