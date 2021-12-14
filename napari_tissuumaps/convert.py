@@ -6,6 +6,7 @@ import json
 from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+from napari.layers.labels.labels import Labels
 from napari.types import FullLayerData
 from napari.utils.io import imsave
 from napari.viewer import current_viewer
@@ -109,44 +110,28 @@ def generate_tmap_config(
     default_filters = [
         {"name": "Brightness", "value": "0"},
         {"name": "Contrast", "value": "1"},
+        {"name": "Color", "value": "0"},
     ]
     regions = {}
-    idx = 0  # Image index
-    # We need to keep track of how many colors have been used for the labels, which
-    # is different from `idx`. Using `idx` would make the app skip colors everytime
-    # there is an image.
-    used_colors = 0
-    # Each image gets a unique `idx` value, as well as each label in each Napari label
-    # layer.
+    idx = 0  # Image index, keeps track of images and labels to get a consistent
+    # indexing in the tmap project file.
     for data, meta, layer_type in layer_data:
         if layer_type == "image":
             layers.append(
                 {"name": meta["name"], "tileSource": f"images/{meta['name']}.tif.dzi"}
             )
             layer_filters[str(idx)] = default_filters.copy()
-            layer_filters[str(idx)].append({"name": "Color", "value": "0"})
             layer_opacities[str(idx)] = str(meta["opacity"])
             layer_visibilities[str(idx)] = str(meta["visible"])
             idx += 1
         elif layer_type == "labels":
-            # The labels objects can contain multiple labels each in Napari. They are
-            # separated as multiple images in Tissuumaps.
-            for j, label in enumerate(np.unique(data)):
-                if label == 0:
-                    continue
-                layers.append(
-                    {
-                        "name": f"{meta['name']} ({label})",
-                        "tileSource": f"labels/{meta['name']}_{j:02d}.tif.dzi",
-                    }
-                )
-                color = ",".join(map(str, TMAP_COLORS[used_colors % len(TMAP_COLORS)]))
-                layer_filters[str(idx)] = default_filters.copy()
-                layer_filters[str(idx)].append({"name": "Color", "value": color})
-                layer_opacities[str(idx)] = str(meta["opacity"])
-                layer_visibilities[str(idx)] = str(meta["visible"])
-                idx += 1
-                used_colors += 1
+            layers.append(
+                {"name": meta["name"], "tileSource": f"labels/{meta['name']}.tif.dzi"}
+            )
+            layer_filters[str(idx)] = default_filters.copy()
+            layer_opacities[str(idx)] = str(meta["opacity"])
+            layer_visibilities[str(idx)] = str(meta["visible"])
+            idx += 1
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
 
@@ -377,20 +362,15 @@ def tmap_writer(
         elif layer_type == "labels":
             # The labels layers may have multiple sub-labels that must be separated in
             # different images for Tissuumaps to read. Each label gets a color given by
-            # a colormap from matplotlib, instead of being provided by Napari.
+            # a random colormap from Napari.
             labels_folder = save_path / "labels"
             labels_folder.mkdir(exist_ok=True)
-            for i, label in enumerate(np.unique(data)):
-                if label == 0:
-                    continue
-                path_label = labels_folder / f"{meta['name']}_{i:02d}.tif"
-                # Currently the colormap cycles when there are more labels than
-                # available colors
-                label_img = np.ones(data.shape + (3,))
-                mask = data == label
-                label_img[~mask] = 0
-                label_img_uint8 = (label_img * 255.0).astype(np.uint8)
-                imsave(str(path_label), label_img_uint8)
+            path_label = labels_folder / f"{meta['name']}.tif"
+            # Recreating the colored image
+            label_layer = Labels(data, **meta)
+            label_img = label_layer.colormap.map(label_layer._raw_to_displayed(data))
+            label_img_uint8 = (label_img * 255.0).astype(np.uint8)
+            imsave(str(path_label), label_img_uint8)
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
         else:

@@ -22,4 +22,3 @@ def is_path_tissuumaps_filename(path: Union[Path, str]) -> bool:
     """
     extensions = "".join(Path(path).suffixes)
     return extensions.endswith(".tmap")
-

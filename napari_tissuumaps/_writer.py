@@ -174,4 +174,3 @@ def napari_write_shapes(path: str, data: Any, meta: dict) -> Optional[str]:
         Otherwise, if nothing was done, return ``None``.
     """
     return tmap_writer(path, [(data, meta, "shapes")])
-

@@ -1,4 +1,4 @@
-__version__ = "0.0.1"
+__version__ = "0.1.2"
 __all__ = [
     "napari_get_writer",
     "napari_write_image",
@@ -7,7 +7,7 @@ __all__ = [
     "napari_write_shapes",
     "generate_tmap_config",
     "generate_shapes_dict",
-    "tmap_writer"
+    "tmap_writer",
 ]
 
 from ._writer import (
@@ -18,9 +18,4 @@ from ._writer import (
     napari_write_shapes,
 )
 
-from .convert import (
-    generate_tmap_config,
-    generate_shapes_dict,
-    tmap_writer
-)
-
+from .convert import generate_tmap_config, generate_shapes_dict, tmap_writer
