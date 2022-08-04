@@ -6,10 +6,11 @@ import json
 from logging import getLogger
 from pathlib import Path
 from typing import Any, Dict, List, Union
+
+import numpy as np
 from napari.layers.labels.labels import Labels
 from napari.types import FullLayerData
 from napari.utils.io import imsave
-import numpy as np
 
 logger = getLogger(__name__)
 

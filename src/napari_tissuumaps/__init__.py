@@ -5,7 +5,4 @@ except ImportError:
 from ._writer import write_layers
 from .convert import tmap_writer
 
-__all__ = (
-    "write_layers",
-    "tmap_writer"
-)
+__all__ = ("write_layers", "tmap_writer")

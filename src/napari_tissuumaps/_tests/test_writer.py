@@ -1,8 +1,9 @@
+import hashlib
+import tempfile
+from pathlib import Path
+
 import napari
 from skimage.data import astronaut
-import tempfile
-import hashlib
-from pathlib import Path
 
 
 def load_napari_test_project():
