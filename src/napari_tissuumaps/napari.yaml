@@ -1,0 +1,11 @@
+name: napari-tissuumaps
+display_name: Napari TissUUmaps
+contributions:
+  commands:
+    - id: napari-tissuumaps.write_layers
+      python_name: napari_tissuumaps._writer:write_layers
+      title: Export layers as a TissUUmaps project
+  writers:
+    - command: napari-tissuumaps.write_layers
+      layer_types: ['image*','labels*', 'points*', 'shapes*']
+      filename_extensions: ['.tmap']

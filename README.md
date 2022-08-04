@@ -1,24 +1,24 @@
 # 🏝 napari-tissuumaps 🧫
 
-[![License](https://img.shields.io/pypi/l/napari-tissuumaps.svg?color=green)](https://github.com/npielawski/napari-tissuumaps/raw/master/LICENSE)
+[![License MIT](https://img.shields.io/pypi/l/napari-tissuumaps.svg?color=green)](https://github.com/npielawski/napari-tissuumaps/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-tissuumaps.svg?color=green)](https://pypi.org/project/napari-tissuumaps)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-tissuumaps.svg?color=green)](https://python.org)
-[![tests](https://github.com/wahlby-lab/napari-tissuumaps/workflows/tests/badge.svg)](https://github.com/wahlby-lab/napari-tissuumaps/actions)
-[![codecov](https://codecov.io/gh/wahlby-lab/napari-tissuumaps/branch/master/graph/badge.svg)](https://codecov.io/gh/wahlby-lab/napari-tissuumaps)
+[![tests](https://github.com/npielawski/napari-tissuumaps/workflows/tests/badge.svg)](https://github.com/npielawski/napari-tissuumaps/actions)
+[![codecov](https://codecov.io/gh/npielawski/napari-tissuumaps/branch/main/graph/badge.svg)](https://codecov.io/gh/npielawski/napari-tissuumaps)
+[![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-tissuumaps)](https://napari-hub.org/plugins/napari-tissuumaps)
 
-A plugin to add compatibility with [TissUUmaps](https://tissuumaps.research.it.uu.se/).
+A plugin to export Napari projects to [TissUUmaps](https://tissuumaps.research.it.uu.se/).
 
 ----------------------------------
 
-This plugins adds a new writer to [Napari] to export projects to [TissUUmaps](https://tissuumaps.research.it.uu.se/).
-Exported projects can than be open on the browser or on a standalone GUI with [Tissumaps](https://github.com/TissUUmaps/TissUUmaps).
+This plugins adds a new writer to [Napari] to export projects to [TissUUmaps](https://github.com/TissUUmaps/TissUUmaps). Exported projects can then be open on the browser or on a standalone GUI with [TissUUmaps](https://github.com/TissUUmaps/TissUUmaps). More information and demonstrations are available on the [TissUUmaps webpage](https://tissuumaps.research.it.uu.se/).
 
 <!--
 Don't miss the full getting started guide to set up your new package:
 https://github.com/napari/cookiecutter-napari-plugin#getting-started
 
 and review the napari docs for plugin developers:
-https://napari.org/docs/plugins/index.html
+https://napari.org/stable/plugins/index.html
 -->
 
 ## 🚀 Features
@@ -30,7 +30,7 @@ https://napari.org/docs/plugins/index.html
 The plugin now supports:
 
 * Exporting images
-* Exporting labels (the colors follow TissUUmaps colormaps)
+* Exporting labels
 * Exporting points
 * Exporting shapes, including:
     * Polygons
@@ -39,8 +39,7 @@ The plugin now supports:
     * Paths
     * Ellipses
 
-The plugin exports the right color for the points and shapes and also saves the
-visibility/opacity of each layers.
+The plugin exports the right color for the points, shapes and labels and also saves the visibility/opacity of each layers. The shapes are exported in the GeoJSON format, the points in CSV files, and images as TIFFs.
 
 ## 📺 Installation
 
@@ -58,12 +57,8 @@ install.
 ## ⛏ Usage
 
 To export a project for TissUUmaps, access the menubar, File > Save All Layers... and
-choose a filename with a `.tmap` extension. It will create a folder containing all the
-necessary files for TissUUmaps.
-
-## 📚 Documentation
-
-Install pdoc with `pip install pdoc` and run the `docs/generate_doc.sh` script from the root. It will generate a static website that contains the documentation in the `docs` folder.
+type in a filename. Choose the `.tmap` extension in the dropdown and click on the Save
+button, It will create a folder containing all the necessary files for TissUUmaps.
 
 ## 👩‍💻 Contributing
 
@@ -89,8 +84,6 @@ If you encounter any problems, please [file an issue] along with a detailed desc
 [Apache Software License 2.0]: http://www.apache.org/licenses/LICENSE-2.0
 [Mozilla Public License 2.0]: https://www.mozilla.org/media/MPL/2.0/index.txt
 [cookiecutter-napari-plugin]: https://github.com/napari/cookiecutter-napari-plugin
-
-[file an issue]: https://github.com/npielawski/napari-tissuumaps/issues
 
 [napari]: https://github.com/napari/napari
 [tox]: https://tox.readthedocs.io/en/latest/

@@ -5,26 +5,11 @@ generating pythonic versions of the data first, then saving them.
 import json
 from logging import getLogger
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 from napari.layers.labels.labels import Labels
 from napari.types import FullLayerData
 from napari.utils.io import imsave
-from napari.viewer import current_viewer
 import numpy as np
-from napari_tissuumaps.utils.io import is_path_tissuumaps_filename
-
-# List of Napari layers that are supported by this plugin:
-SUPPORTED_FORMATS = ["image", "points", "labels", "shapes"]
-# Base colormap of the filters to apply on images in TissUUmaps.
-TMAP_COLORS = [
-    [100, 0, 0],  # Red
-    [0, 100, 0],  # Green
-    [0, 0, 100],  # Blue
-    [100, 100, 0],  # Yellow
-    [0, 100, 100],  # Cyan
-    [100, 0, 100],  # Magenta
-    [100, 100, 100],  # Gray
-]
 
 logger = getLogger(__name__)
 
@@ -61,7 +46,9 @@ def filter_type(
 
 
 def generate_tmap_config(
-    filename: str, layer_data: List[FullLayerData], internal_shapes: bool = False
+    filename: str,
+    layer_data: List[FullLayerData],
+    internal_shapes: bool = False,
 ) -> Dict[str, Any]:
     """Generates a dict containing the tissumaps cfg of the napari layers to be saved.
 
@@ -113,24 +100,32 @@ def generate_tmap_config(
         {"name": "Color", "value": "0"},
     ]
     regions = {}
-    idx = 0  # Image index, keeps track of images and labels to get a consistent
+    idx = (
+        0  # Image index, keeps track of images and labels to get a consistent
+    )
     # indexing in the tmap project file.
     for data, meta, layer_type in layer_data:
         if layer_type == "image":
             layers.append(
-                {"name": meta["name"], "tileSource": f"images/{meta['name']}.tif.dzi"}
+                {
+                    "name": meta["name"],
+                    "tileSource": f"images/{meta['name']}.tif.dzi",
+                }
             )
             layer_filters[str(idx)] = default_filters.copy()
             layer_opacities[str(idx)] = str(meta["opacity"])
-            layer_visibilities[str(idx)] = str(meta["visible"])
+            layer_visibilities[str(idx)] = bool(meta["visible"])
             idx += 1
         elif layer_type == "labels":
             layers.append(
-                {"name": meta["name"], "tileSource": f"labels/{meta['name']}.tif.dzi"}
+                {
+                    "name": meta["name"],
+                    "tileSource": f"labels/{meta['name']}.tif.dzi",
+                }
             )
             layer_filters[str(idx)] = default_filters.copy()
             layer_opacities[str(idx)] = str(meta["opacity"])
-            layer_visibilities[str(idx)] = str(meta["visible"])
+            layer_visibilities[str(idx)] = bool(meta["visible"])
             idx += 1
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
@@ -148,10 +143,16 @@ def generate_tmap_config(
         "markerFiles": markers,
         "settings": [
             {"function": "_autoLoadCSV", "module": "dataUtils", "value": True},
-            {"function": "_globalMarkerScale", "module": "glUtils", "value": 7.5},
+            {
+                "function": "_globalMarkerScale",
+                "module": "glUtils",
+                "value": 7.5,
+            },
         ],
     }
-    if internal_shapes:
+    if not regions:
+        config["regions"] = {}
+    elif internal_shapes:
         config["regions"] = regions
     else:
         config["regionFile"] = "regions/regions.json"
@@ -159,9 +160,11 @@ def generate_tmap_config(
     return config
 
 
-def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str, Any]:
+def generate_shapes_dict(
+    data: FullLayerData, meta: Dict[str, Any]
+) -> Dict[str, Any]:
     """Generates a dictionary containing the info to plot shapes in Tissuumaps.
-    The dict can later on be exported as a json file or added to the .tmap project
+    The dict can later on be exported as a geoJson file or added to the .tmap project
     file.
 
     Parameters
@@ -177,13 +180,22 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
     Dict[str, Any]
         A dictionary containing the information to draw the shapes in Tissuumaps.
     """
-    shape_dict = {}
+    shape_dict = {"type": "FeatureCollection", "features": []}
     for i, shape in enumerate(data):
         shape_type = meta["shape_type"][i]
         shape_name = meta["name"] + f"_{shape_type}_{i+1}"
+        shape_color = (255 * meta["face_color"][i, :3]).astype(int).tolist()
         # We enumerate each shapes that appear in the layer
-        subshape_dict = {}
-        subshape_dict["id"] = shape_name
+        subshape_dict = {
+            "type": "Feature",
+            "geometry": {"type": "MultiPolygon"},
+            "properties": {
+                "name": shape_name,
+                "classification": {"name": ""},
+                "color": shape_color,
+                "isLocked": False,
+            },
+        }
         # Different shapes have different points to draw
         points_to_draw = []
         if shape_type == "ellipse":
@@ -222,57 +234,18 @@ def generate_shapes_dict(data: FullLayerData, meta: Dict[str, Any]) -> Dict[str,
             assert isinstance(shape, np.ndarray)
             points_to_draw = shape
 
-        # Points with pixel positions
-        points_array = []
-        _xmin, _xmax, _ymin, _ymax = np.inf, -np.inf, np.inf, -np.inf
-        dimensions = current_viewer().dims.range
-        width, height = dimensions[0][1], dimensions[1][1]
-        for _points in points_to_draw:
-            points = [_points[1] / height, _points[0] / width]
-            points_array.append({"x": points[0], "y": points[1]})
-            _xmin = _xmin if points[0] > _xmin else points[0]
-            _xmax = _xmax if points[0] < _xmax else points[0]
-            _ymin = _ymin if points[1] > _ymin else points[1]
-            _ymax = _ymax if points[1] < _ymax else points[1]
-        subshape_dict["points"] = [[points_array]]
-        # Points with normalized positions (in [0,1])
-        global_points_array = []
-        _gxmin, _gxmax, _gymin, _gymax = np.inf, -np.inf, np.inf, -np.inf
-        for _points in points_to_draw:
-            points = [_points[1], _points[0]]
-            global_points_array.append({"x": points[0], "y": points[1]})
-            _gxmin = _gxmin if points[0] > _gxmin else points[0]
-            _gxmax = _gxmax if points[0] < _gxmax else points[0]
-            _gymin = _gymin if points[1] > _gymin else points[1]
-            _gymax = _gymax if points[1] < _gymax else points[1]
-        subshape_dict["globalPoints"] = [[global_points_array]]
-        shape_color = rgb2hex(meta["face_color"][i])
-        shape_settings = {
-            "regionName": shape_name,
-            "regionClass": None,
-            "barcodeHistogram": [],
-            "len": 1,
-            "_xmin": _xmin,
-            "_xmax": _xmax,
-            "_ymin": _ymin,
-            "_ymax": _ymax,
-            "_gxmin": _gxmin,
-            "_gxmax": _gxmax,
-            "_gymin": _gymin,
-            "_gymax": _gymax,
-            "polycolor": shape_color,
-            "associatedPoints": [],
-            "filled": True,
-        }
-        subshape_dict.update(shape_settings)
+        # The columns are swapped due to conventional differences between Napari (y, x)
+        # and TissUUmaps (x, y)
+        coordinates = points_to_draw[:, [1, 0]].tolist()
+        subshape_dict["geometry"]["coordinates"] = [[coordinates]]
         # Adding the properties, if there are any
         properties = meta.get("properties", {}).copy()
         for prop in properties:
             if isinstance(properties[prop], np.ndarray):
                 properties[prop] = properties[prop].tolist()[i]
-        subshape_dict["properties"] = properties
+        subshape_dict["properties"]["extra"] = properties
         # We add it to the full dict
-        shape_dict[shape_name] = subshape_dict
+        shape_dict["features"].append(subshape_dict)
     return shape_dict
 
 
@@ -293,7 +266,7 @@ def rgb2hex(color_vec: np.ndarray) -> str:
 
 def tmap_writer(
     save_path: Union[Path, str], layer_data: List[FullLayerData]
-) -> Optional[str]:
+) -> List[str]:
     """Creates a Tissuumaps project folder based on a Napari list of layers.
 
     Parameters
@@ -305,15 +278,10 @@ def tmap_writer(
         The list of layers to save as provided by Napari.
     Returns
     -------
-    str
-        A string containing the path to the Tissuumaps project folder if the save was
-        successful, otherwise None.
+    List[str]
+        A list of string containing each of the filenames that were written.
     """
-
-    # Sanity check to verify the user wants to save a tmap file.
-    if not is_path_tissuumaps_filename(save_path):
-        return None
-
+    savedfilenames = []
     # The main tissuumaps project folder is created.
     save_path = Path(save_path)
     save_path.mkdir(parents=True, exist_ok=True)
@@ -321,6 +289,7 @@ def tmap_writer(
     # Creation of the tmap file
     tmap_cfg = generate_tmap_config(save_path.stem, layer_data)
     tmap_file = open(save_path / "main.tmap", "w+")
+    savedfilenames.append(tmap_file.name)
     tmap_file.write(json.dumps(tmap_cfg, indent=4))
     tmap_file.close()
 
@@ -334,6 +303,7 @@ def tmap_writer(
             image_folder.mkdir(exist_ok=True)
             path_image = image_folder / f"{meta['name']}.tif"
             imsave(str(path_image), data)
+            savedfilenames.append(path_image)
         elif layer_type == "points":
             # The Napari points are in a different coordinate system (y,x) that must be
             # converted to Tissuumaps which uses (x,y). The colors of the individual
@@ -343,17 +313,22 @@ def tmap_writer(
             path_points = points_folder / f"{meta['name']}.csv"
             # Constructing the columns
             y, x = data[:, 0:1], data[:, 1:2]
-            color = np.array([[rgb2hex(color)] for color in meta["face_color"]])
+            color = np.array(
+                [[rgb2hex(color)] for color in meta["face_color"]]
+            )
             symbol = np.array([[meta["symbol"]]] * x.shape[0])
             points = np.block([x, y, color, symbol])
             # Extract the properties
             properties = meta.get("properties")
             # Saving the csv file manually.
             points_file = open(path_points, "w+")
+            savedfilenames.append(path_points.name)
             prop_keys = "," + ",".join(properties.keys()) if properties else ""
             points_file.write(f"name,x,y,color,symbol{prop_keys}\n")
             for i, (_x, _y, _color, _symbol) in enumerate(points):
-                points_file.write(f"{meta['name']},{_x},{_y},{_color},{_symbol}")
+                points_file.write(
+                    f"{meta['name']},{_x},{_y},{_color},{_symbol}"
+                )
                 if properties:
                     for prop in properties.keys():
                         points_file.write(f",{properties[prop][i]}")
@@ -368,9 +343,12 @@ def tmap_writer(
             path_label = labels_folder / f"{meta['name']}.tif"
             # Recreating the colored image
             label_layer = Labels(data, **meta)
-            label_img = label_layer.colormap.map(label_layer._raw_to_displayed(data))
+            label_img = label_layer.colormap.map(
+                label_layer._raw_to_displayed(data)
+            )
             label_img_uint8 = (label_img * 255.0).astype(np.uint8)
             imsave(str(path_label), label_img_uint8)
+            savedfilenames.append(path_label)
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
         else:
@@ -386,7 +364,10 @@ def tmap_writer(
         # Saving the json
         shapes_filename = "regions.json"
         shapes_file = open(shapes_folder / shapes_filename, "w+")
+        savedfilenames.append(shapes_file.name)
         shapes_file.write(json.dumps(regions, indent=4))
         shapes_file.close()
 
-    return str(save_path)
+    # Convertion from Path to str
+    savedfilenames = list(map(str, savedfilenames))
+    return savedfilenames
