@@ -1,10 +1,9 @@
 # 🏝 napari-tissuumaps 🧫
 
-[![License MIT](https://img.shields.io/pypi/l/napari-tissuumaps.svg?color=green)](https://github.com/npielawski/napari-tissuumaps/raw/main/LICENSE)
+[![License MIT](https://img.shields.io/pypi/l/napari-tissuumaps.svg?color=green)](https://github.com/tissuumaps/napari-tissuumaps/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/napari-tissuumaps.svg?color=green)](https://pypi.org/project/napari-tissuumaps)
 [![Python Version](https://img.shields.io/pypi/pyversions/napari-tissuumaps.svg?color=green)](https://python.org)
-[![tests](https://github.com/npielawski/napari-tissuumaps/workflows/tests/badge.svg)](https://github.com/npielawski/napari-tissuumaps/actions)
-[![codecov](https://codecov.io/gh/npielawski/napari-tissuumaps/branch/main/graph/badge.svg)](https://codecov.io/gh/npielawski/napari-tissuumaps)
+[![tests](https://github.com/tissuumaps/napari-tissuumaps/workflows/tests/badge.svg)](https://github.com/tissuumaps/napari-tissuumaps/actions)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/napari-tissuumaps)](https://napari-hub.org/plugins/napari-tissuumaps)
 
 A plugin to export Napari projects to [TissUUmaps](https://tissuumaps.research.it.uu.se/).
