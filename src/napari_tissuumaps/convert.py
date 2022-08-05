@@ -1,6 +1,6 @@
-"""This modules implements functions that convert the napari file format to Tissuumaps.
-The functions are implemented such that the module can be reused in other context by
-generating pythonic versions of the data first, then saving them.
+"""This module implements an exporter from the Napari layers to TissUUmaps.
+The functions are implemented such that the module can be reused in other
+context by generating pythonic versions of the data first, then saving them.
 """
 import json
 from logging import getLogger
@@ -24,16 +24,16 @@ def filter_type(
     Parameters
     ----------
     layer_data : List[FullLayerData]
-        The list of layers provided by Napari. Must contain tuples, with the third one
-        corresponding to the layer type as a string.
+        The list of layers provided by Napari. Must contain tuples, with the
+        third one corresponding to the layer type as a string.
     type_filter : Union[str, List[str]]
-        The filter to use a string. It is possible to use multiple filters by providing
-        a list of strings.
+        The filter to use a string. It is possible to use multiple filters by
+        providing a list of strings.
     Returns
     -------
     List[FullLayerData]
-        The list of layers in the same format as the one in `layer_data` where the
-        layer types *not* corresponding to `type_filter` are discarded.
+        The list of layers in the same format as the one in `layer_data` where
+        the layer types *not* corresponding to `type_filter` are discarded.
     """
     # Making sure `file_type` is a list
     if not isinstance(type_filter, list):
@@ -51,27 +51,27 @@ def generate_tmap_config(
     layer_data: List[FullLayerData],
     internal_shapes: bool = False,
 ) -> Dict[str, Any]:
-    """Generates a dict containing the tissumaps cfg of the napari layers to be saved.
+    """Generates the tissumaps config of the napari layers to be saved.
 
     Parameters
     ----------
     filename : str
         The filename to use in Tissuumaps.
     layer_data : List[FullLayerData]
-        The layers to be saved as provided by the Napari plugin manager. It contains a
-        list of layers, which are themselves dictionary containing the data, the meta-
-        data and the type of layer.
+        The layers to be saved as provided by the Napari plugin manager. It
+        contains a list of layers, which are themselves dictionary containing
+        the data, the metadata and the type of layer.
     internal_shapes : bool
-        Determines if the shapes layer are saved in the tmap file (True) or if the tmap
-        file references an external json file (False).
+        Determines if the shapes layer are saved in the tmap file (True) or if
+        the tmap file references an external json file (False).
     Returns
     -------
     Dict[str, Any]
-        The Tissuumaps configuration as a dictionary. The aim is to later save a json
-        file with a .tmap extension.
+        The Tissuumaps configuration as a dictionary. The aim is to later save
+        a json file with a .tmap extension.
     """
-    # This function first create nested lists and dictionary to add the the final
-    # dictionary in the latter part of the function.
+    # This function first create nested lists and dictionary to add the the
+    # final dictionary in the latter part of the function.
 
     # Generating the list of markers (points).
     markers = []
@@ -114,7 +114,7 @@ def generate_tmap_config(
                 }
             )
             layer_filters[str(idx)] = default_filters.copy()
-            layer_opacities[str(idx)] = str(meta["opacity"])
+            layer_opacities[str(idx)] = "{:.3f}".format(meta["opacity"])
             layer_visibilities[str(idx)] = bool(meta["visible"])
             idx += 1
         elif layer_type == "labels":
@@ -125,14 +125,14 @@ def generate_tmap_config(
                 }
             )
             layer_filters[str(idx)] = default_filters.copy()
-            layer_opacities[str(idx)] = str(meta["opacity"])
+            layer_opacities[str(idx)] = "{:.3f}".format(meta["opacity"])
             layer_visibilities[str(idx)] = bool(meta["visible"])
             idx += 1
         elif layer_type == "shapes":
             regions.update(generate_shapes_dict(data, meta))
 
-    # The final configuration to be returned, combining all the lists and dictionaries
-    # generated above.
+    # The final configuration to be returned, combining all the lists and
+    # dictionaries generated above.
     config = {
         "compositeMode": "lighter",
         "filename": filename,
@@ -165,21 +165,23 @@ def generate_shapes_dict(
     data: FullLayerData, meta: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Generates a dictionary containing the info to plot shapes in Tissuumaps.
-    The dict can later on be exported as a geoJson file or added to the .tmap project
-    file.
+    The dict can later on be exported as a geoJson file or added to the .tmap
+    project file.
 
     Parameters
     ----------
     data : FullLayerData
-        The Shapes layer data (A list of shapes, which are lists of points) as provided
-        by Napari.
+        The Shapes layer data (A list of shapes, which are lists of points) as
+        provided by Napari.
     meta : Dict[str, Any]
-        The metadata of the shapes layer containing the name and colors of the shapes.
+        The metadata of the shapes layer containing the name and colors of the
+        shapes.
 
     Returns
     -------
     Dict[str, Any]
-        A dictionary containing the information to draw the shapes in Tissuumaps.
+        A dictionary containing the information to draw the shapes in
+        Tissuumaps.
     """
     shape_dict = {"type": "FeatureCollection", "features": []}
     for i, shape in enumerate(data):
@@ -205,16 +207,16 @@ def generate_shapes_dict(
                 (shape[0][0] + shape[2][0]) / 2.0,
                 (shape[0][1] + shape[1][1]) / 2.0,
             )
-            # `a` represents the vector from the center of the ellipse to the right
-            # hand side, while `b` is the up vector.
+            # `a` represents the vector from the center of the ellipse to the
+            # right hand side, while `b` is the up vector.
             ellipse_a = shape[1][0] - ellipse_center[0]
             ellipse_b = shape[1][1] - ellipse_center[1]
 
-            # Minimum arc distance is the the length of a single arc as a function of
-            # the ellipse's radii. The purpose is such that the resolution (number of
-            # points) grows with the ellipse. The formula is approximated and computes
-            # the arc based on a circle with the radius being equal to the longest
-            # axis of the ellipse.
+            # Minimum arc distance is the the length of a single arc as a
+            # function of the ellipse's radii. The purpose is such that the
+            # resolution (number of points) grows with the ellipse. The formula
+            # is approximated and compute the arc based on a circle with the
+            # radius being equal to the longest axis of the ellipse.
             minimum_arc_distance = 3.0
             max_axis = np.maximum(np.abs(ellipse_a), np.abs(ellipse_b))
             N = np.maximum(
@@ -235,8 +237,8 @@ def generate_shapes_dict(
             assert isinstance(shape, np.ndarray)
             points_to_draw = shape
 
-        # The columns are swapped due to conventional differences between Napari (y, x)
-        # and TissUUmaps (x, y)
+        # The columns are swapped due to conventional differences between
+        # Napari (y, x) and TissUUmaps (x, y)
         coordinates = points_to_draw[:, [1, 0]].tolist()
         subshape_dict["geometry"]["coordinates"] = [[coordinates]]
         # Adding the properties, if there are any
@@ -273,8 +275,8 @@ def tmap_writer(
     Parameters
     ----------
     save_path : Union[Path, str]
-        The path to save the Tissuumaps project to. Must contain the name of the
-        tissumap project file, including the .tmap extension.
+        The path to save the Tissuumaps project to. Must contain the name of
+        the tissumap project file, including the .tmap extension.
     layer_data : List[FullLayerData]
         The list of layers to save as provided by Napari.
     Returns
@@ -306,9 +308,9 @@ def tmap_writer(
             imsave(str(path_image), data)
             savedfilenames.append(path_image)
         elif layer_type == "points":
-            # The Napari points are in a different coordinate system (y,x) that must be
-            # converted to Tissuumaps which uses (x,y). The colors of the individual
-            # points are extracted from the metadata.
+            # The Napari points are in a different coordinate system (y,x)
+            # that must be converted to Tissuumaps which uses (x,y). The colors
+            # of the individual points are extracted from the metadata.
             points_folder = save_path / "points"
             points_folder.mkdir(exist_ok=True)
             path_points = points_folder / f"{meta['name']}.csv"
@@ -336,9 +338,9 @@ def tmap_writer(
                 points_file.write("\n")
             points_file.close()
         elif layer_type == "labels":
-            # The labels layers may have multiple sub-labels that must be separated in
-            # different images for Tissuumaps to read. Each label gets a color given by
-            # a random colormap from Napari.
+            # The labels layers may have multiple sub-labels that must be
+            # separated in different images for Tissuumaps to read. Each label
+            # gets a color given by a random colormap from Napari.
             labels_folder = save_path / "labels"
             labels_folder.mkdir(exist_ok=True)
             path_label = labels_folder / f"{meta['name']}.tif"
@@ -354,8 +356,8 @@ def tmap_writer(
             regions.update(generate_shapes_dict(data, meta))
         else:
             logger.warning(
-                f"Layer \"{meta['name']}\" cannot be saved. This type of layer "
-                "({layer_type}) is not yet implemented."
+                f"Layer \"{meta['name']}\" cannot be saved. This type of layer"
+                " ({layer_type}) is not yet implemented."
             )
 
     # Saving the shapes
